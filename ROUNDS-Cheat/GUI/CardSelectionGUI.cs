@@ -161,13 +161,22 @@ namespace ROUNDSCheat.GUI
                     UnityEngine.GUI.color = Color.white;
 
                     // Show some card info if available
-                    GUILayout.BeginVertical(GUILayout.Width(100));
-                    if (!string.IsNullOrEmpty(card.cardDestription))
-                    {
-                        var miniStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontSize = 10 };
-                        GUILayout.Label("Info", miniStyle);
-                    }
-                    GUILayout.EndVertical();
+                    // GUILayout.BeginVertical(GUILayout.Width(200));
+                    // var miniStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontSize = 10 };
+                    // GUILayout.Label("Info", miniStyle);
+                    // if (!string.IsNullOrEmpty(card.cardDestription))
+                    // {
+                    //     GUILayout.Label(card.cardDestription, miniStyle);
+                    // }
+                    // if (card.cardStats != null && card.cardStats.Length > 0)
+                    // {
+                    //     foreach (var stat in card.cardStats)
+                    //     {
+                    //         GUILayout.Label(stat.GetSimpleAmount(), miniStyle);
+                    //     }
+                    // }
+                    // GUILayout.Label($"Rarity: {card.rarity}", miniStyle);
+                    // GUILayout.EndVertical();
 
                     GUILayout.EndHorizontal();
                     GUILayout.Space(2);
@@ -243,7 +252,7 @@ namespace ROUNDSCheat.GUI
         public void RefreshCardList()
         {
             // Get cards from the CardChoiceTestPatch
-            availableCards = ROUNDSCheat.Patches.CardChoiceTestPatch.GetAvailableCards();
+            availableCards = ROUNDSCheat.Patches.CardChoiceModifier.GetAvailableCards();
             FilterCards();
 
             if (availableCards != null)

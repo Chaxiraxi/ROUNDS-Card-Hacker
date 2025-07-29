@@ -5,10 +5,13 @@ using System.Linq;
 
 namespace ROUNDSCheat.Patches
 {
-    [HarmonyPatch(typeof(CardChoice))]  // STFU Copilot, __instance is a typo in the original code
-    public class CardChoiceTestPatch
+    [HarmonyPatch(typeof(CardChoice))]
+    public class CardChoiceModifier
     {
         private static CardInfo[] cards = null;
+        private static int spawnCallCount = 0;
+        private static int selectedCardPosition = 0;
+        private static System.Random random = new System.Random();
 
         [HarmonyPrefix]
         [HarmonyPatch("Spawn")]
@@ -23,20 +26,24 @@ namespace ROUNDSCheat.Patches
             // Check if a card is selected in the GUI
             CardInfo selectedCard = CardSelectionGUI.GetSelectedCard();
 
-            if (selectedCard != null && objToSpawn != null)
+            // Reset batch and randomize position when starting a new batch of 5 calls
+            if (spawnCallCount % 5 == 0)
             {
-                // Force spawn the selected card
-                objToSpawn = selectedCard.gameObject;
-                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Force spawned selected card: {selectedCard.cardName}");
+                selectedCardPosition = random.Next(0, 5);
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: New batch started, selected position: {selectedCardPosition}");
+            }
 
-                // Optionally clear the selection after use (uncomment if you want single-use selection)
-                // CardSelectionGUI.ClearSelectedCard();
+            if (selectedCard != null && objToSpawn != null && spawnCallCount % 5 == selectedCardPosition)
+            {
+                // Force spawn the selected card at the randomized position
+                objToSpawn = selectedCard.gameObject;
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Force spawned selected card: {selectedCard.cardName} at position {selectedCardPosition}");
+                CardSelectionGUI.ClearSelectedCard();
             }
             else if (objToSpawn != null && cards != null && cards.Length > 0)
             {
-                // Fallback to first card if no GUI selection (original behavior)
-                objToSpawn = cards[0].gameObject;
-                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Spawned default card: {cards[0].cardName}");
+                // Use original behavior for other positions
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Spawned default card: {cards[spawnCallCount % cards.Length].cardName} at position {spawnCallCount % 5}");
             }
             else
             {
@@ -53,12 +60,11 @@ namespace ROUNDSCheat.Patches
                     ROUNDSCheatPlugin.Logger.LogWarning("No cards available to spawn.");
                 }
             }
+
+            spawnCallCount++;
         }
 
         // Public method to provide card list to GUI
-        public static CardInfo[] GetAvailableCards()
-        {
-            return cards;
-        }
+        public static CardInfo[] GetAvailableCards() => cards;
     }
 }
