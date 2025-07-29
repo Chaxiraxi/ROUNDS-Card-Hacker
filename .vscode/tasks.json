@@ -1,0 +1,58 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Project",
+            "type": "shell",
+            "command": "dotnet build",
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "Deploy DLL",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "Copy-Item",
+                "\"C:\\Users\\Chaxiraxi\\Documents\\dev\\ROUNDS-Cheat\\ROUNDS-Cheat\\bin\\Debug\\net472\\ROUNDS-Cheat.dll\"",
+                "-Destination",
+                "\"C:\\Users\\Chaxiraxi\\AppData\\Roaming\\r2modmanPlus-local\\ROUNDS\\profiles\\Default\\BepInEx\\plugins\\Chaxiraxi-ROUNDS-Cheat\\ROUNDS-Cheat.dll\"",
+                "-Force"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "dependsOn": [
+                "Build Project"
+            ]
+        },
+        {
+            "label": "Launch Game",
+            "type": "shell",
+            "command": "start",
+            "args": [
+                "steam://rungameid/1557740"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Deploy and Launch",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "Deploy DLL",
+                "Launch Game"
+            ],
+            "dependsOrder": "sequence"
+        }
+    ]
+}
