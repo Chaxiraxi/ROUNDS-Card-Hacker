@@ -10,8 +10,8 @@ namespace ROUNDSCheat.Patches
     {
         private static CardInfo[] cards = null;
         private static int spawnCallCount = 0;
-        private static int selectedCardPosition = 0;
         private static System.Random random = new System.Random();
+        private static int selectedCardPosition = random.Next(0, 5);
 
         [HarmonyPrefix]
         [HarmonyPatch("Spawn")]
@@ -30,20 +30,19 @@ namespace ROUNDSCheat.Patches
             if (spawnCallCount % 5 == 0)
             {
                 selectedCardPosition = random.Next(0, 5);
-                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: New batch started, selected position: {selectedCardPosition}");
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: New batch started, selected position: {selectedCardPosition + 1}");
             }
 
             if (selectedCard != null && objToSpawn != null && spawnCallCount % 5 == selectedCardPosition)
             {
                 // Force spawn the selected card at the randomized position
                 objToSpawn = selectedCard.gameObject;
-                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Force spawned selected card: {selectedCard.cardName} at position {selectedCardPosition}");
-                CardSelectionGUI.ClearSelectedCard();
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Force spawned selected card: {selectedCard.cardName} at position {selectedCardPosition + 1}");
             }
             else if (objToSpawn != null && cards != null && cards.Length > 0)
             {
                 // Use original behavior for other positions
-                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Spawned default card: {cards[spawnCallCount % cards.Length].cardName} at position {spawnCallCount % 5}");
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Spawned default card: {objToSpawn.GetComponent<CardInfo>().cardName} at position {spawnCallCount % 5}");
             }
             else
             {
@@ -62,6 +61,24 @@ namespace ROUNDSCheat.Patches
             }
 
             spawnCallCount++;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("SpawnUniqueCard")]
+        public static void FixSourceCard(ref GameObject __result, CardChoice __instance)
+        {
+            // Check if a card is selected in the GUI
+            CardInfo selectedCard = CardSelectionGUI.GetSelectedCard();
+
+            // Only fix the source card if we're at the position where ForceSpawnCard would have applied the selected card
+            if (__result != null && selectedCard != null &&
+            (spawnCallCount - 1) % 5 == selectedCardPosition)
+            {
+                // Fix the source card and clear the selection
+                __result.GetComponent<CardInfo>().sourceCard = selectedCard;
+                CardSelectionGUI.ClearSelectedCard();
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Fixed source card to {__result.GetComponent<CardInfo>().sourceCard.cardName}");
+            }
         }
 
         // Public method to provide card list to GUI

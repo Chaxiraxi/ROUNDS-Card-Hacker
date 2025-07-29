@@ -19,12 +19,10 @@ namespace ROUNDSCheat.GUI
         private Vector2 resizeStartSize;
         private const float MinWidth = 300f;
         private const float MinHeight = 400f;
-        private const float ResizeBorderSize = 10f;
+        private const float ResizeBorderSize = 24f;
 
         // Search functionality
         private string searchFilter = "";
-        private bool showSearch = true;
-
         private bool initialized = false;
         private static CardSelectionGUI Instance;
         private const float WindowProportion = 0.4f; // 40% of screen size
@@ -161,22 +159,25 @@ namespace ROUNDSCheat.GUI
                     UnityEngine.GUI.color = Color.white;
 
                     // Show some card info if available
-                    // GUILayout.BeginVertical(GUILayout.Width(200));
-                    // var miniStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontSize = 10 };
-                    // GUILayout.Label("Info", miniStyle);
-                    // if (!string.IsNullOrEmpty(card.cardDestription))
-                    // {
-                    //     GUILayout.Label(card.cardDestription, miniStyle);
-                    // }
-                    // if (card.cardStats != null && card.cardStats.Length > 0)
-                    // {
-                    //     foreach (var stat in card.cardStats)
-                    //     {
-                    //         GUILayout.Label(stat.GetSimpleAmount(), miniStyle);
-                    //     }
-                    // }
-                    // GUILayout.Label($"Rarity: {card.rarity}", miniStyle);
-                    // GUILayout.EndVertical();
+                    GUILayout.BeginVertical(GUILayout.Width(200));
+                    var miniStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontSize = 10, wordWrap = true };
+                    miniStyle.margin = new RectOffset(0, 0, 0, 0);
+                    if (!string.IsNullOrEmpty(card.cardDestription))
+                    {
+                        string plainDescription = System.Text.RegularExpressions.Regex.Replace(card.cardDestription, "<.*?>", string.Empty);    // Remove HTML tags
+                        GUILayout.Label(plainDescription, miniStyle);
+                    }
+                    if (card.cardStats != null && card.cardStats.Length > 0)
+                    {
+                        foreach (var stat in card.cardStats)
+                        {
+                            string amount = stat.amount;
+                            string statName = stat.stat;
+                            GUILayout.Label($"{statName}: {amount}", miniStyle);
+                        }
+                    }
+                    GUILayout.Label($"Rarity: {card.rarity}", miniStyle);
+                    GUILayout.EndVertical();
 
                     GUILayout.EndHorizontal();
                     GUILayout.Space(2);
@@ -257,7 +258,7 @@ namespace ROUNDSCheat.GUI
 
             if (availableCards != null)
             {
-                ROUNDSCheatPlugin.Logger.LogInfo($"Refreshed card list: {availableCards.Length} cards found");
+                // ROUNDSCheatPlugin.Logger.LogInfo($"Refreshed card list: {availableCards.Length} cards found");
             }
             else
             {
