@@ -8,6 +8,7 @@ namespace ROUNDSCheat.GUI
     {
         public static bool IsVisible { get; set; } = false;
         public static CardInfo SelectedCard { get; set; } = null;
+        public static bool ShouldAutoclearSelectedCard { get; private set; } = true;
 
         private Rect windowRect;
         private const int WindowId = 54321; // Unique ID for the window
@@ -19,7 +20,7 @@ namespace ROUNDSCheat.GUI
         private Vector2 resizeStartSize;
         private const float MinWidth = 300f;
         private const float MinHeight = 400f;
-        private const float ResizeBorderSize = 24f;
+        private const float ResizeBorderSize = 18f;
 
         // Search functionality
         private string searchFilter = "";
@@ -118,6 +119,15 @@ namespace ROUNDSCheat.GUI
 
             GUILayout.Space(5);
 
+            // Auto-clear checkbox
+            GUILayout.BeginHorizontal();
+            bool newAutoClearValue = GUILayout.Toggle(ShouldAutoclearSelectedCard, "Auto-clear selection after card choice");
+            if (newAutoClearValue != ShouldAutoclearSelectedCard)
+            {
+                ShouldAutoclearSelectedCard = newAutoClearValue;
+            }
+            GUILayout.EndHorizontal();
+
             // Card count info
             if (availableCards != null)
             {
@@ -150,7 +160,7 @@ namespace ROUNDSCheat.GUI
                     }
 
                     // Card selection button
-                    if (GUILayout.Button($"{card.cardName}", GUILayout.ExpandWidth(true), GUILayout.Height(30)))
+                    if (GUILayout.Button($"{card.cardName}", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
                     {
                         SelectedCard = card;
                         ROUNDSCheatPlugin.Logger.LogInfo($"Selected card: {card.cardName}");
@@ -255,15 +265,7 @@ namespace ROUNDSCheat.GUI
             // Get cards from the CardChoiceTestPatch
             availableCards = ROUNDSCheat.Patches.CardChoiceModifier.GetAvailableCards();
             FilterCards();
-
-            if (availableCards != null)
-            {
-                // ROUNDSCheatPlugin.Logger.LogInfo($"Refreshed card list: {availableCards.Length} cards found");
-            }
-            else
-            {
-                ROUNDSCheatPlugin.Logger.LogWarning("No cards available to refresh");
-            }
+            if (availableCards == null) ROUNDSCheatPlugin.Logger.LogWarning("No cards available to refresh");
         }
 
         private void FilterCards()
@@ -280,9 +282,19 @@ namespace ROUNDSCheat.GUI
             {
                 string filter = searchFilter.ToLower();
                 filteredCards.AddRange(availableCards.Where(card =>
-                    card != null &&
-                    card.cardName != null &&
-                    card.cardName.ToLower().Contains(filter)
+                    card != null && (
+                        // Search in card name
+                        (card.cardName != null && card.cardName.ToLower().Contains(filter)) ||
+                        // Search in card description
+                        (card.cardDestription != null && card.cardDestription.ToLower().Contains(filter)) ||
+                        // Search in card stats
+                        (card.cardStats != null && card.cardStats.Any(stat =>
+                            (stat.stat != null && stat.stat.ToLower().Contains(filter)) ||
+                            (stat.amount != null && stat.amount.ToLower().Contains(filter))
+                        )) ||
+                        // Search in rarity
+                        (card.rarity.ToString().ToLower().Contains(filter))
+                    )
                 ));
             }
 
@@ -295,14 +307,8 @@ namespace ROUNDSCheat.GUI
             });
         }
 
-        public static CardInfo GetSelectedCard()
-        {
-            return SelectedCard;
-        }
+        public static CardInfo GetSelectedCard() => SelectedCard;
 
-        public static void ClearSelectedCard()
-        {
-            SelectedCard = null;
-        }
+        public static void ClearSelectedCard() => SelectedCard = null;
     }
 }

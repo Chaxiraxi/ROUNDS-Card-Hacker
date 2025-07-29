@@ -42,7 +42,7 @@ namespace ROUNDSCheat.Patches
             else if (objToSpawn != null && cards != null && cards.Length > 0)
             {
                 // Use original behavior for other positions
-                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Spawned default card: {objToSpawn.GetComponent<CardInfo>().cardName} at position {spawnCallCount % 5}");
+                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Spawned default card: {objToSpawn.GetComponent<CardInfo>().cardName} at position {(spawnCallCount % 5) + 1}");
             }
             else
             {
@@ -76,7 +76,7 @@ namespace ROUNDSCheat.Patches
             {
                 // Fix the source card and clear the selection
                 __result.GetComponent<CardInfo>().sourceCard = selectedCard;
-                CardSelectionGUI.ClearSelectedCard();
+                if (CardSelectionGUI.ShouldAutoclearSelectedCard) CardSelectionGUI.ClearSelectedCard();
                 ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Fixed source card to {__result.GetComponent<CardInfo>().sourceCard.cardName}");
             }
         }
