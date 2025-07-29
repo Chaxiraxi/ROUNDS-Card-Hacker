@@ -147,19 +147,26 @@ namespace ROUNDSCheat.GUI
 
             if (filteredCards != null && filteredCards.Count > 0)
             {
-                foreach (var card in filteredCards)
+                // Virtualization: only render visible cards
+                int cardHeight = 60; // Approximate height per card row
+                int visibleCount = Mathf.FloorToInt(windowRect.height / cardHeight);
+                int startIndex = Mathf.FloorToInt(scrollPosition.y / cardHeight);
+                int endIndex = Mathf.Min(filteredCards.Count, startIndex + visibleCount + 2); // +2 for buffer
+
+                GUILayout.Space(startIndex * cardHeight); // Spacer for skipped cards
+
+                for (int i = startIndex; i < endIndex; i++)
                 {
+                    var card = filteredCards[i];
                     if (card == null) continue;
 
                     GUILayout.BeginHorizontal("box");
 
-                    // Highlight selected card
                     if (SelectedCard == card)
                     {
                         UnityEngine.GUI.color = Color.cyan;
                     }
 
-                    // Card selection button
                     if (GUILayout.Button($"{card.cardName}", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
                     {
                         SelectedCard = card;
@@ -168,13 +175,12 @@ namespace ROUNDSCheat.GUI
 
                     UnityEngine.GUI.color = Color.white;
 
-                    // Show some card info if available
                     GUILayout.BeginVertical(GUILayout.Width(200));
                     var miniStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontSize = 10, wordWrap = true };
                     miniStyle.margin = new RectOffset(0, 0, 0, 0);
                     if (!string.IsNullOrEmpty(card.cardDestription))
                     {
-                        string plainDescription = System.Text.RegularExpressions.Regex.Replace(card.cardDestription, "<.*?>", string.Empty);    // Remove HTML tags
+                        string plainDescription = System.Text.RegularExpressions.Regex.Replace(card.cardDestription, "<.*?>", string.Empty);
                         GUILayout.Label(plainDescription, miniStyle);
                     }
                     if (card.cardStats != null && card.cardStats.Length > 0)
@@ -192,6 +198,8 @@ namespace ROUNDSCheat.GUI
                     GUILayout.EndHorizontal();
                     GUILayout.Space(2);
                 }
+
+                GUILayout.Space((filteredCards.Count - endIndex) * cardHeight); // Spacer for remaining cards
             }
             else if (availableCards != null)
             {
