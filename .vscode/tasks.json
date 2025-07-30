@@ -18,9 +18,9 @@
             "args": [
                 "-Command",
                 "Copy-Item",
-                "\"C:\\Users\\Chaxiraxi\\Documents\\dev\\ROUNDS-Cheat\\ROUNDS-Cheat\\bin\\Debug\\net472\\ROUNDS-Cheat.dll\"",
+                "\"C:\\Users\\Chaxiraxi\\Documents\\dev\\CardHacker\\CardHacker\\bin\\Debug\\net472\\CardHacker.dll\"",
                 "-Destination",
-                "\"C:\\Users\\Chaxiraxi\\AppData\\Roaming\\r2modmanPlus-local\\ROUNDS\\profiles\\Default\\BepInEx\\plugins\\Chaxiraxi-ROUNDS-Cheat\\ROUNDS-Cheat.dll\"",
+                "\"C:\\Users\\Chaxiraxi\\AppData\\Roaming\\r2modmanPlus-local\\ROUNDS\\profiles\\Default\\BepInEx\\plugins\\Chaxiraxi-CardHacker\\CardHacker.dll\"",
                 "-Force"
             ],
             "problemMatcher": [],

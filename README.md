@@ -36,7 +36,7 @@ A client-side cheat for ROUNDS that allows you to select and force specific card
    ```
 3. **Copy the DLL** to your BepInEx plugins folder:
    ```
-   ROUNDS/BepInEx/plugins/ROUNDS-Cheat.dll
+   ROUNDS/BepInEx/plugins/CardHacker.dll
    ```
 4. **Launch ROUNDS** - The plugin will load automatically
 
