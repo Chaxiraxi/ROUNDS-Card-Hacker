@@ -285,8 +285,8 @@ namespace ROUNDSCheat.GUI
             );
             UnityEngine.GUI.Box(resizeRect, "");
 
-            // Start resizing if mouse down on resize handle
-            if (e.type == EventType.MouseDown && resizeRect.Contains(e.mousePosition))
+            // Start resizing if mouse down on resize handle (support both left and right click)
+            if (e.type == EventType.MouseDown && resizeRect.Contains(e.mousePosition) && (e.button == 0 || e.button == 1))
             {
                 isResizing = true;
                 // Convert GUI mouse position to screen coordinates for global tracking
@@ -314,8 +314,8 @@ namespace ROUNDSCheat.GUI
                 windowRect.width = newWidth;
                 windowRect.height = newHeight;
 
-                // Stop resizing when mouse button is released
-                if (!Input.GetMouseButton(0))
+                // Stop resizing when either mouse button is released
+                if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1))
                 {
                     isResizing = false;
                 }
