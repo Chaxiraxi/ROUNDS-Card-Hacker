@@ -21,6 +21,12 @@ A client-side cheat for ROUNDS that allows you to select and force specific card
 - **Smooth Scrolling**: Efficiently browse through hundreds of cards
 - **Real-time Updates**: Refresh card list without restarting the game
 
+### Deck Builder Mode
+- **Deck Stack Management**: Enable "Deck Builder Mode" to access a second window for managing a deck stack.
+- **Add Cards to Deck**: Click on cards in the main window to add them to the deck stack when "Deck Builder Mode" is enabled.
+- **Forced Spawning**: The first card in the deck stack is used for forced spawning in each batch of 5 drawn cards, and it is removed from the stack after use.
+- **Seamless Integration**: Easily toggle between normal card selection and deck building modes.
+
 ## Installation
 
 1. **Install BepInEx** for ROUNDS if you haven't already

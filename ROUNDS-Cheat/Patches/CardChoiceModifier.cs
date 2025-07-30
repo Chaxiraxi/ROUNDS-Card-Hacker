@@ -23,8 +23,16 @@ namespace ROUNDSCheat.Patches
                 ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Registered {cards.Length} cards");
             }
 
+            CardInfo selectedCard = null;
             // Check if a card is selected in the GUI
-            CardInfo selectedCard = CardSelectionGUI.GetSelectedCard();
+            if (DeckManager.IsDeckBuilderModeEnabled)
+            {
+                selectedCard = DeckManager.GetNextCard();
+            }
+            else
+            {
+                selectedCard = CardSelectionGUI.GetSelectedCard();
+            }
 
             // Reset batch and randomize position when starting a new batch of 5 calls
             if (spawnCallCount % 5 == 0)
@@ -68,7 +76,15 @@ namespace ROUNDSCheat.Patches
         public static void FixSourceCard(ref GameObject __result, CardChoice __instance)
         {
             // Check if a card is selected in the GUI
-            CardInfo selectedCard = CardSelectionGUI.GetSelectedCard();
+            CardInfo selectedCard;
+            if (DeckManager.IsDeckBuilderModeEnabled)
+            {
+                selectedCard = DeckManager.GetNextCard();
+            }
+            else
+            {
+                selectedCard = CardSelectionGUI.GetSelectedCard();
+            }
 
             // Only fix the source card if we're at the position where ForceSpawnCard would have applied the selected card
             if (__result != null && selectedCard != null &&
@@ -76,7 +92,8 @@ namespace ROUNDSCheat.Patches
             {
                 // Fix the source card and clear the selection
                 __result.GetComponent<CardInfo>().sourceCard = selectedCard;
-                if (CardSelectionGUI.ShouldAutoclearSelectedCard) CardSelectionGUI.ClearSelectedCard();
+                if (CardSelectionGUI.ShouldAutoclearSelectedCard && !DeckManager.IsDeckBuilderModeEnabled) CardSelectionGUI.ClearSelectedCard();
+                if (DeckManager.IsDeckBuilderModeEnabled) DeckManager.RemoveNextCard();
                 ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Fixed source card to {__result.GetComponent<CardInfo>().sourceCard.cardName}");
             }
         }

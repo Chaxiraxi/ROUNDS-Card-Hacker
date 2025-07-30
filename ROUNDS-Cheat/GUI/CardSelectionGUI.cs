@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace ROUNDSCheat.GUI
 {
@@ -11,8 +12,11 @@ namespace ROUNDSCheat.GUI
         public static bool ShouldAutoclearSelectedCard { get; private set; } = true;
 
         private Rect windowRect;
+        private Rect deckWindowRect;
         private const int WindowId = 54321; // Unique ID for the window
+        private const int DeckWindowId = 54322;
         private Vector2 scrollPosition = Vector2.zero;
+        private Vector2 deckScrollPosition = Vector2.zero;
 
         // Resizing functionality
         private bool isResizing = false;
@@ -55,10 +59,15 @@ namespace ROUNDSCheat.GUI
                 float width = Mathf.Max(MinWidth, Screen.width * WindowProportion);
                 float height = Mathf.Max(MinHeight, Screen.height * WindowProportion);
                 windowRect = new Rect(50, 50, width, height);
+                deckWindowRect = new Rect(windowRect.xMax + 10, 50, 300, 400);
                 initialized = true;
             }
 
             windowRect = GUILayout.Window(WindowId, windowRect, DrawCardSelectionWindow, "ROUNDS Card Selector");
+            if (DeckManager.IsDeckBuilderModeEnabled)
+            {
+                deckWindowRect = GUILayout.Window(DeckWindowId, deckWindowRect, DrawDeckWindow, "Deck Stack");
+            }
         }
 
         void DrawCardSelectionWindow(int windowID)
@@ -67,25 +76,33 @@ namespace ROUNDSCheat.GUI
 
             // Title and status
             var boldStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontStyle = FontStyle.Bold };
-            GUILayout.Label("Select a card to force spawn on next card choice:", boldStyle);
-
-            if (SelectedCard != null)
+            if (DeckManager.IsDeckBuilderModeEnabled)
             {
-                UnityEngine.GUI.color = Color.green;
-                GUILayout.Label($"Selected: {SelectedCard.cardName}", boldStyle);
-                UnityEngine.GUI.color = Color.white;
-
-                if (GUILayout.Button("Clear Selection"))
-                {
-                    SelectedCard = null;
-                }
+                GUILayout.Label("Click a card to add it to the deck", boldStyle);
             }
             else
             {
-                UnityEngine.GUI.color = Color.yellow;
-                GUILayout.Label("No card selected", boldStyle);
-                UnityEngine.GUI.color = Color.white;
+                GUILayout.Label("Select a card to force spawn on next card choice:", boldStyle);
+
+                if (SelectedCard != null)
+                {
+                    UnityEngine.GUI.color = Color.green;
+                    GUILayout.Label($"Selected: {SelectedCard.cardName}", boldStyle);
+                    UnityEngine.GUI.color = Color.white;
+
+                    if (GUILayout.Button("Clear Selection"))
+                    {
+                        SelectedCard = null;
+                    }
+                }
+                else
+                {
+                    UnityEngine.GUI.color = Color.yellow;
+                    GUILayout.Label("No card selected", boldStyle);
+                    UnityEngine.GUI.color = Color.white;
+                }
             }
+
 
             GUILayout.Space(10);
 
@@ -114,13 +131,26 @@ namespace ROUNDSCheat.GUI
             GUILayout.Space(5);
 
             // Auto-clear checkbox
-            GUILayout.BeginHorizontal();
-            bool newAutoClearValue = GUILayout.Toggle(ShouldAutoclearSelectedCard, "Auto-clear selection after card choice");
-            if (newAutoClearValue != ShouldAutoclearSelectedCard)
+            if (!DeckManager.IsDeckBuilderModeEnabled)
             {
-                ShouldAutoclearSelectedCard = newAutoClearValue;
+                GUILayout.BeginHorizontal();
+                bool newAutoClearValue = GUILayout.Toggle(ShouldAutoclearSelectedCard, "Auto-clear selection after card choice");
+                if (newAutoClearValue != ShouldAutoclearSelectedCard)
+                {
+                    ShouldAutoclearSelectedCard = newAutoClearValue;
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            // Deck builder mode checkbox
+            GUILayout.BeginHorizontal();
+            bool newDeckBuilderMode = GUILayout.Toggle(DeckManager.IsDeckBuilderModeEnabled, "Deck Builder Mode");
+            if (newDeckBuilderMode != DeckManager.IsDeckBuilderModeEnabled)
+            {
+                DeckManager.IsDeckBuilderModeEnabled = newDeckBuilderMode;
             }
             GUILayout.EndHorizontal();
+
 
             // Card count info
             if (availableCards != null)
@@ -156,7 +186,7 @@ namespace ROUNDSCheat.GUI
 
                     GUILayout.BeginHorizontal("box");
 
-                    if (SelectedCard == card)
+                    if (!DeckManager.IsDeckBuilderModeEnabled && SelectedCard == card)
                     {
                         UnityEngine.GUI.color = Color.cyan;
                     }
@@ -164,8 +194,15 @@ namespace ROUNDSCheat.GUI
                     var buttonStyle = new GUIStyle(UnityEngine.GUI.skin.button) { fontSize = 20 };
                     if (GUILayout.Button($"{card.cardName}", buttonStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
                     {
-                        SelectedCard = card;
-                        ROUNDSCheatPlugin.Logger.LogInfo($"Selected card: {card.cardName}");
+                        if (DeckManager.IsDeckBuilderModeEnabled)
+                        {
+                            DeckManager.AddCardToDeck(card);
+                        }
+                        else
+                        {
+                            SelectedCard = card;
+                            ROUNDSCheatPlugin.Logger.LogInfo($"Selected card: {card.cardName}");
+                        }
                     }
 
                     UnityEngine.GUI.color = Color.white;
@@ -220,6 +257,58 @@ namespace ROUNDSCheat.GUI
 
             // Handle resizing
             HandleResizing();
+
+            UnityEngine.GUI.DragWindow();
+        }
+
+        void DrawDeckWindow(int windowId)
+        {
+            GUILayout.BeginVertical();
+
+            var boldStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontStyle = FontStyle.Bold };
+            GUILayout.Label("Deck Stack", boldStyle);
+
+            if (DeckManager.Deck.Count == 0)
+            {
+                GUILayout.Label("Deck is empty. Add cards from the selector.");
+            }
+            else
+            {
+                GUILayout.Label($"Card Count: {DeckManager.Deck.Count}");
+
+                if (GUILayout.Button("Clear Deck"))
+                {
+                    DeckManager.ClearDeck();
+                }
+            }
+
+            deckScrollPosition = GUILayout.BeginScrollView(deckScrollPosition, GUILayout.ExpandHeight(true));
+
+            for (int i = 0; i < DeckManager.Deck.Count; i++)
+            {
+                var card = DeckManager.Deck[i];
+                GUILayout.BeginHorizontal("box");
+                GUILayout.Label(card.cardName, GUILayout.ExpandWidth(true));
+
+                if (GUILayout.Button("Up", GUILayout.Width(40)))
+                {
+                    DeckManager.MoveCardUp(i);
+                    break;
+                }
+                if (GUILayout.Button("Down", GUILayout.Width(50)))
+                {
+                    DeckManager.MoveCardDown(i);
+                    break;
+                }
+                if (GUILayout.Button("X", GUILayout.Width(30)))
+                {
+                    DeckManager.RemoveCardAt(i);
+                    break;
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndScrollView();
 
             UnityEngine.GUI.DragWindow();
         }
