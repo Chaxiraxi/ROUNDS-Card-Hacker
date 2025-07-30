@@ -16,7 +16,7 @@ namespace ROUNDSCheat.GUI
         private Vector2 resizeStartMouse;
         private Vector2 resizeStartSize;
         private const float MinHeight = 200f;
-        private const float ResizeBorderSize = 18f;
+        private const float ResizeBorderSize = 15f;
 
         void OnGUI()
         {

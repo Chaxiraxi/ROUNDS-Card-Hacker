@@ -23,7 +23,7 @@ namespace ROUNDSCheat.GUI
         private Vector2 resizeStartSize;
         private const float MinWidth = 300f;
         private const float MinHeight = 400f;
-        private const float ResizeBorderSize = 18f;
+        private const float ResizeBorderSize = 15f;
 
         // Search functionality
         private string searchFilter = "";

@@ -94,7 +94,6 @@ namespace ROUNDSCheat.Patches
                 __result.GetComponent<CardInfo>().sourceCard = selectedCard;
                 if (CardSelectionGUI.ShouldAutoclearSelectedCard && !DeckManager.IsDeckBuilderModeEnabled) CardSelectionGUI.ClearSelectedCard();
                 if (DeckManager.IsDeckBuilderModeEnabled) DeckManager.RemoveNextCard();
-                ROUNDSCheatPlugin.Logger.LogInfo($"CardChoiceTestPatch: Fixed source card to {__result.GetComponent<CardInfo>().sourceCard.cardName}");
             }
         }
 
