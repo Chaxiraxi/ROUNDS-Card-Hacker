@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
-using System.Linq;
 
 namespace ROUNDSCheat.GUI
 {
@@ -10,13 +9,13 @@ namespace ROUNDSCheat.GUI
         public static bool IsVisible { get; set; } = false;
         public static CardInfo SelectedCard { get; set; } = null;
         public static bool ShouldAutoclearSelectedCard { get; private set; } = true;
+        public static float WindowMaxXPos { get; private set; } = 0f;
+        public const float InitialXPos = 50f; // Initial X position for the window
+        public const float InitialYPos = 50f; // Initial Y position for the window
 
         private Rect windowRect;
-        private Rect deckWindowRect;
         private const int WindowId = 54321; // Unique ID for the window
-        private const int DeckWindowId = 54322;
         private Vector2 scrollPosition = Vector2.zero;
-        private Vector2 deckScrollPosition = Vector2.zero;
 
         // Resizing functionality
         private bool isResizing = false;
@@ -35,12 +34,22 @@ namespace ROUNDSCheat.GUI
         private CardInfo[] availableCards = null;
         private List<CardInfo> filteredCards = new List<CardInfo>();
 
+        // Reference to deck stack GUI
+        private DeckStackGUI deckStackGUI;
+
         void Update()
         {
+            // Initialize deck stack GUI if not already done
+            if (deckStackGUI == null)
+            {
+                deckStackGUI = gameObject.AddComponent<DeckStackGUI>();
+            }
+
             // Toggle GUI with F1
             if (Input.GetKeyDown(KeyCode.F1))
             {
                 IsVisible = !IsVisible;
+                DeckStackGUI.IsVisible = IsVisible && DeckManager.IsDeckBuilderModeEnabled;
                 if (IsVisible)
                 {
                     RefreshCardList();
@@ -58,16 +67,12 @@ namespace ROUNDSCheat.GUI
             {
                 float width = Mathf.Max(MinWidth, Screen.width * WindowProportion);
                 float height = Mathf.Max(MinHeight, Screen.height * WindowProportion);
-                windowRect = new Rect(50, 50, width, height);
-                deckWindowRect = new Rect(windowRect.xMax + 10, 50, 300, 400);
+                windowRect = new Rect(InitialXPos, InitialYPos, width, height);
                 initialized = true;
             }
 
             windowRect = GUILayout.Window(WindowId, windowRect, DrawCardSelectionWindow, "ROUNDS Card Selector");
-            if (DeckManager.IsDeckBuilderModeEnabled)
-            {
-                deckWindowRect = GUILayout.Window(DeckWindowId, deckWindowRect, DrawDeckWindow, "Deck Stack");
-            }
+            WindowMaxXPos = windowRect.xMax;
         }
 
         void DrawCardSelectionWindow(int windowID)
@@ -148,6 +153,11 @@ namespace ROUNDSCheat.GUI
             if (newDeckBuilderMode != DeckManager.IsDeckBuilderModeEnabled)
             {
                 DeckManager.IsDeckBuilderModeEnabled = newDeckBuilderMode;
+                // Update deck stack GUI visibility when mode changes
+                if (deckStackGUI != null)
+                {
+                    DeckStackGUI.IsVisible = IsVisible && DeckManager.IsDeckBuilderModeEnabled;
+                }
             }
             GUILayout.EndHorizontal();
 
@@ -261,58 +271,6 @@ namespace ROUNDSCheat.GUI
             UnityEngine.GUI.DragWindow();
         }
 
-        void DrawDeckWindow(int windowId)
-        {
-            GUILayout.BeginVertical();
-
-            var boldStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontStyle = FontStyle.Bold };
-            GUILayout.Label("Deck Stack", boldStyle);
-
-            if (DeckManager.Deck.Count == 0)
-            {
-                GUILayout.Label("Deck is empty. Add cards from the selector.");
-            }
-            else
-            {
-                GUILayout.Label($"Card Count: {DeckManager.Deck.Count}");
-
-                if (GUILayout.Button("Clear Deck"))
-                {
-                    DeckManager.ClearDeck();
-                }
-            }
-
-            deckScrollPosition = GUILayout.BeginScrollView(deckScrollPosition, GUILayout.ExpandHeight(true));
-
-            for (int i = 0; i < DeckManager.Deck.Count; i++)
-            {
-                var card = DeckManager.Deck[i];
-                GUILayout.BeginHorizontal("box");
-                GUILayout.Label(card.cardName, GUILayout.ExpandWidth(true));
-
-                if (GUILayout.Button("Up", GUILayout.Width(40)))
-                {
-                    DeckManager.MoveCardUp(i);
-                    break;
-                }
-                if (GUILayout.Button("Down", GUILayout.Width(50)))
-                {
-                    DeckManager.MoveCardDown(i);
-                    break;
-                }
-                if (GUILayout.Button("X", GUILayout.Width(30)))
-                {
-                    DeckManager.RemoveCardAt(i);
-                    break;
-                }
-                GUILayout.EndHorizontal();
-            }
-
-            GUILayout.EndScrollView();
-
-            UnityEngine.GUI.DragWindow();
-        }
-
         private void HandleResizing()
         {
             Event e = Event.current;
@@ -355,7 +313,7 @@ namespace ROUNDSCheat.GUI
         public void RefreshCardList()
         {
             // Get cards from the CardChoiceTestPatch
-            availableCards = ROUNDSCheat.Patches.CardChoiceModifier.GetAvailableCards();
+            availableCards = Patches.CardChoiceModifier.GetAvailableCards();
             FilterCards();
             if (availableCards == null) ROUNDSCheatPlugin.Logger.LogWarning("No cards available to refresh");
         }
