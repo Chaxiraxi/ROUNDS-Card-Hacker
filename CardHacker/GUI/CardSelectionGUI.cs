@@ -260,6 +260,7 @@ namespace ROUNDSCheat.GUI
             if (GUILayout.Button("Close", GUILayout.Width(60)))
             {
                 IsVisible = false;
+                DeckStackGUI.IsVisible = false; // Hide deck stack GUI when main window is closed
             }
             GUILayout.EndHorizontal();
 
@@ -284,28 +285,39 @@ namespace ROUNDSCheat.GUI
             );
             UnityEngine.GUI.Box(resizeRect, "");
 
+            // Start resizing if mouse down on resize handle
             if (e.type == EventType.MouseDown && resizeRect.Contains(e.mousePosition))
             {
                 isResizing = true;
-                resizeStartMouse = e.mousePosition;
+                // Convert GUI mouse position to screen coordinates for global tracking
+                Vector2 screenMousePos = GUIUtility.GUIToScreenPoint(e.mousePosition);
+                resizeStartMouse = screenMousePos;
                 resizeStartSize = new Vector2(windowRect.width, windowRect.height);
                 e.Use();
             }
 
+            // Handle resizing using global mouse coordinates
             if (isResizing)
             {
-                if (e.type == EventType.MouseDrag)
-                {
-                    float w = Mathf.Max(MinWidth, resizeStartSize.x + (e.mousePosition.x - resizeStartMouse.x));
-                    float h = Mathf.Max(MinHeight, resizeStartSize.y + (e.mousePosition.y - resizeStartMouse.y));
-                    windowRect.width = w;
-                    windowRect.height = h;
-                    e.Use();
-                }
-                else if (e.type == EventType.MouseUp)
+                // Use Input.mousePosition for global mouse tracking (note: Input.mousePosition is in screen coordinates)
+                Vector2 currentScreenMouse = Input.mousePosition;
+                // Unity's Input.mousePosition has Y=0 at bottom, but GUI has Y=0 at top, so flip Y
+                currentScreenMouse.y = Screen.height - currentScreenMouse.y;
+
+                // Calculate new size based on mouse movement from start position
+                float deltaX = currentScreenMouse.x - resizeStartMouse.x;
+                float deltaY = currentScreenMouse.y - resizeStartMouse.y;
+
+                float newWidth = Mathf.Max(MinWidth, resizeStartSize.x + deltaX);
+                float newHeight = Mathf.Max(MinHeight, resizeStartSize.y + deltaY);
+
+                windowRect.width = newWidth;
+                windowRect.height = newHeight;
+
+                // Stop resizing when mouse button is released
+                if (!Input.GetMouseButton(0))
                 {
                     isResizing = false;
-                    e.Use();
                 }
             }
         }

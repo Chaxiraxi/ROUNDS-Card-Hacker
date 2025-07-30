@@ -105,26 +105,35 @@ namespace ROUNDSCheat.GUI
             );
             UnityEngine.GUI.Box(resizeRect, "");
 
+            // Start resizing if mouse down on resize handle
             if (e.type == EventType.MouseDown && resizeRect.Contains(e.mousePosition))
             {
                 isResizing = true;
-                resizeStartMouse = e.mousePosition;
+                // Convert GUI mouse position to screen coordinates for global tracking
+                Vector2 screenMousePos = GUIUtility.GUIToScreenPoint(e.mousePosition);
+                resizeStartMouse = screenMousePos;
                 resizeStartSize = new Vector2(deckWindowRect.width, deckWindowRect.height);
                 e.Use();
             }
 
+            // Handle resizing using global mouse coordinates
             if (isResizing)
             {
-                if (e.type == EventType.MouseDrag)
-                {
-                    float newHeight = Mathf.Max(MinHeight, resizeStartSize.y + (e.mousePosition.y - resizeStartMouse.y));
-                    deckWindowRect.height = newHeight;
-                    e.Use();
-                }
-                else if (e.type == EventType.MouseUp)
+                // Use Input.mousePosition for global mouse tracking (note: Input.mousePosition is in screen coordinates)
+                Vector2 currentScreenMouse = Input.mousePosition;
+                // Unity's Input.mousePosition has Y=0 at bottom, but GUI has Y=0 at top, so flip Y
+                currentScreenMouse.y = Screen.height - currentScreenMouse.y;
+
+                // Calculate new height based on mouse movement from start position (only Y for vertical resize)
+                float deltaY = currentScreenMouse.y - resizeStartMouse.y;
+                float newHeight = Mathf.Max(MinHeight, resizeStartSize.y + deltaY);
+
+                deckWindowRect.height = newHeight;
+
+                // Stop resizing when mouse button is released
+                if (!Input.GetMouseButton(0))
                 {
                     isResizing = false;
-                    e.Use();
                 }
             }
         }
