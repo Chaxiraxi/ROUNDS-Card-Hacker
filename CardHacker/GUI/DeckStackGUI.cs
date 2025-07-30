@@ -11,6 +11,13 @@ namespace ROUNDSCheat.GUI
         private Vector2 deckScrollPosition = Vector2.zero;
         private bool initialized = false;
 
+        // Resizing functionality
+        private bool isResizing = false;
+        private Vector2 resizeStartMouse;
+        private Vector2 resizeStartSize;
+        private const float MinHeight = 200f;
+        private const float ResizeBorderSize = 18f;
+
         void OnGUI()
         {
             if (!IsVisible || !DeckManager.IsDeckBuilderModeEnabled)
@@ -72,6 +79,9 @@ namespace ROUNDSCheat.GUI
 
             GUILayout.EndScrollView();
 
+            // Handle resizing
+            HandleResizing();
+
             UnityEngine.GUI.DragWindow();
             GUILayout.EndVertical();
         }
@@ -80,6 +90,43 @@ namespace ROUNDSCheat.GUI
         {
             deckWindowRect.x = x;
             deckWindowRect.y = y;
+        }
+
+        private void HandleResizing()
+        {
+            Event e = Event.current;
+
+            // Resize handle at the bottom of the window
+            Rect resizeRect = new Rect(
+                0,
+                deckWindowRect.height - ResizeBorderSize,
+                deckWindowRect.width,
+                ResizeBorderSize
+            );
+            UnityEngine.GUI.Box(resizeRect, "");
+
+            if (e.type == EventType.MouseDown && resizeRect.Contains(e.mousePosition))
+            {
+                isResizing = true;
+                resizeStartMouse = e.mousePosition;
+                resizeStartSize = new Vector2(deckWindowRect.width, deckWindowRect.height);
+                e.Use();
+            }
+
+            if (isResizing)
+            {
+                if (e.type == EventType.MouseDrag)
+                {
+                    float newHeight = Mathf.Max(MinHeight, resizeStartSize.y + (e.mousePosition.y - resizeStartMouse.y));
+                    deckWindowRect.height = newHeight;
+                    e.Use();
+                }
+                else if (e.type == EventType.MouseUp)
+                {
+                    isResizing = false;
+                    e.Use();
+                }
+            }
         }
     }
 }
