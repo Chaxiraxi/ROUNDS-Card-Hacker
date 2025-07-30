@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 using System;
 
 namespace ROUNDSCheat.GUI
@@ -168,7 +167,8 @@ namespace ROUNDSCheat.GUI
                         UnityEngine.GUI.color = Color.cyan;
                     }
 
-                    if (GUILayout.Button($"{card.cardName}", GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
+                    var buttonStyle = new GUIStyle(UnityEngine.GUI.skin.button) { fontSize = 20 };
+                    if (GUILayout.Button($"{card.cardName}", buttonStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)))
                     {
                         SelectedCard = card;
                         ROUNDSCheatPlugin.Logger.LogInfo($"Selected card: {card.cardName}");
@@ -177,7 +177,7 @@ namespace ROUNDSCheat.GUI
                     UnityEngine.GUI.color = Color.white;
 
                     GUILayout.BeginVertical(GUILayout.Width(200));
-                    var miniStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontSize = 10, wordWrap = true };
+                    var miniStyle = new GUIStyle(UnityEngine.GUI.skin.label) { fontSize = 12, wordWrap = true };
                     miniStyle.margin = new RectOffset(0, 0, 0, 0);
                     if (!string.IsNullOrEmpty(card.cardDestription))
                     {
