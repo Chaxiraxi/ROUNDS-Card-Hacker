@@ -25,17 +25,11 @@ namespace ROUNDSCheat.GUI
         // Search functionality
         private string searchFilter = "";
         private bool initialized = false;
-        private static CardSelectionGUI Instance;
         private const float WindowProportion = 0.4f; // 40% of screen size
 
         // Card list cache
         private CardInfo[] availableCards = null;
         private List<CardInfo> filteredCards = new List<CardInfo>();
-
-        void Start()
-        {
-            Instance = this;
-        }
 
         void Update()
         {
