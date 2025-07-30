@@ -55,26 +55,6 @@ A client-side cheat for ROUNDS that allows you to select and force specific card
 - **Search Filter**: Real-time search across card names, descriptions, stats, and rarity
 - **Window Size**: Resizable interface - drag the bottom-right corner to resize
 
-## Architecture
-
-This mod uses a modern BepInEx plugin architecture with Harmony patches:
-
-### Core Components
-- **ROUNDSCheatPlugin**: Main BepInEx plugin entry point and lifecycle management
-- **CardSelectionGUI**: Complete card browser interface with search and selection
-- **CardChoiceModifier**: Harmony patches that intercept card spawning
-
-### Harmony Patches
-- **CardChoice.Spawn Prefix**: Intercepts card spawning to inject selected cards
-- **CardChoice.SpawnUniqueCard Postfix**: Fixes source card references for proper game integration
-- **Smart Positioning**: Randomizes position of forced cards to avoid detection patterns
-
-### Safety Features
-- **Exception Handling**: All game interactions wrapped in try-catch blocks
-- **Null Checking**: Extensive validation to prevent crashes
-- **Graceful Degradation**: Continues working even if some game systems fail
-- **Comprehensive Logging**: Detailed logging for debugging and monitoring
-
 ## Technical Details
 
 - **Framework**: .NET Framework 4.7.2 (Unity compatibility)
@@ -88,7 +68,6 @@ This mod uses a modern BepInEx plugin architecture with Harmony patches:
 2. **User Selection**: GUI allows browsing and selecting from the complete card database
 3. **Spawn Interception**: Harmony prefix patch intercepts `CardChoice.Spawn` calls
 4. **Smart Injection**: Replaces one of the 5 cards at a random position with the selected card
-5. **Reference Fixing**: Postfix patch ensures the source card reference is correct for game systems
 
 ## Troubleshooting
 
@@ -106,7 +85,6 @@ This mod uses a modern BepInEx plugin architecture with Harmony patches:
 
 **Selected card not spawning**
 - Ensure a card is actually selected (highlighted in cyan)
-- Wait for the next natural card choice - it won't work on the current one
 - Check that auto-clear is configured as desired
 
 **GUI not opening**
