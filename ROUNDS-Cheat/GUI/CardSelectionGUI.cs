@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace ROUNDSCheat.GUI
 {
@@ -284,39 +285,129 @@ namespace ROUNDSCheat.GUI
 
             if (string.IsNullOrEmpty(searchFilter))
             {
+                // When search is empty, just show all cards in alphabetical order
                 filteredCards.AddRange(availableCards);
+
+                // Sort alphabetically
+                filteredCards.Sort((a, b) =>
+                {
+                    if (a?.cardName == null) return 1;
+                    if (b?.cardName == null) return -1;
+                    return a.cardName.CompareTo(b.cardName);
+                });
             }
             else
             {
-                string filter = searchFilter.ToLower();
-                filteredCards.AddRange(availableCards.Where(card =>
-                    card != null && (
-                        // Search in card name
-                        (card.cardName != null && card.cardName.ToLower().Contains(filter)) ||
-                        // Search in card description
-                        (card.cardDestription != null && card.cardDestription.ToLower().Contains(filter)) ||
-                        // Search in card stats
-                        (card.cardStats != null && card.cardStats.Any(stat =>
-                            (stat.stat != null && stat.stat.ToLower().Contains(filter)) ||
-                            (stat.amount != null && stat.amount.ToLower().Contains(filter))
-                        )) ||
-                        // Search in rarity
-                        (card.rarity.ToString().ToLower().Contains(filter))
-                    )
-                ));
-            }
+                // Split search into individual words
+                string[] searchWords = searchFilter.ToLower().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            // Sort cards alphabetically
-            filteredCards.Sort((a, b) =>
-            {
-                if (a?.cardName == null) return 1;
-                if (b?.cardName == null) return -1;
-                return a.cardName.CompareTo(b.cardName);
-            });
+                // Dictionary to store relevance score for each card
+                Dictionary<CardInfo, int> cardScores = new Dictionary<CardInfo, int>();
+                // Dictionary to track which words matched for each card and at which position
+                Dictionary<CardInfo, Dictionary<int, bool>> wordMatchPositions = new Dictionary<CardInfo, Dictionary<int, bool>>();
+
+                foreach (var card in availableCards)
+                {
+                    if (card == null) continue;
+
+                    int score = 0;
+                    var matchedPositions = new Dictionary<int, bool>();
+
+                    for (int wordIndex = 0; wordIndex < searchWords.Length; wordIndex++)
+                    {
+                        string word = searchWords[wordIndex];
+                        bool wordMatched = false;
+
+                        // Card name matches are worth 2 points
+                        if (card.cardName != null && card.cardName.ToLower().Contains(word))
+                        {
+                            score += 2;
+                            wordMatched = true;
+                        }
+
+                        // Description matches are worth 1 point
+                        if (card.cardDestription != null && card.cardDestription.ToLower().Contains(word))
+                        {
+                            score += 1;
+                            wordMatched = true;
+                        }
+
+                        // Stat matches are worth 1 point
+                        if (card.cardStats != null)
+                        {
+                            foreach (var stat in card.cardStats)
+                            {
+                                if ((stat.stat != null && stat.stat.ToLower().Contains(word)) ||
+                                    (stat.amount != null && stat.amount.ToLower().Contains(word)))
+                                {
+                                    score += 1;
+                                    wordMatched = true;
+                                    break; // Only count once per stat section per word
+                                }
+                            }
+                        }
+
+                        // Rarity matches are worth 1 point
+                        if (card.rarity.ToString().ToLower().Contains(word))
+                        {
+                            score += 1;
+                            wordMatched = true;
+                        }
+
+                        // Track which position this word matched at
+                        matchedPositions[wordIndex] = wordMatched;
+                    }
+
+                    // Only include cards that matched at least one search term
+                    if (score > 0)
+                    {
+                        cardScores[card] = score;
+                        wordMatchPositions[card] = matchedPositions;
+                    }
+                }
+
+                // Add cards to filtered list
+                filteredCards.AddRange(cardScores.Keys);
+
+                // Sort by score (descending), then by word order, then alphabetically as final tiebreaker
+                filteredCards.Sort((a, b) =>
+                {
+                    int scoreA = cardScores[a];
+                    int scoreB = cardScores[b];
+
+                    // Primary sort by score (descending)
+                    int scoreComparison = scoreB.CompareTo(scoreA);
+
+                    // If scores are equal, use word order for tie-breaking
+                    if (scoreComparison == 0)
+                    {
+                        // Compare by the order of matched words
+                        var matchesA = wordMatchPositions[a];
+                        var matchesB = wordMatchPositions[b];
+
+                        // Check each word position in order
+                        for (int i = 0; i < searchWords.Length; i++)
+                        {
+                            bool matchA = matchesA.ContainsKey(i) && matchesA[i];
+                            bool matchB = matchesB.ContainsKey(i) && matchesB[i];
+
+                            // If only one card matches this position, it wins
+                            if (matchA && !matchB) return -1;
+                            if (!matchA && matchB) return 1;
+                        }
+
+                        // If identical in terms of word matching, use alphabetical order as final tiebreaker
+                        if (a?.cardName == null) return 1;
+                        if (b?.cardName == null) return -1;
+                        return a.cardName.CompareTo(b.cardName);
+                    }
+
+                    return scoreComparison;
+                });
+            }
         }
 
         public static CardInfo GetSelectedCard() => SelectedCard;
-
         public static void ClearSelectedCard() => SelectedCard = null;
     }
 }
